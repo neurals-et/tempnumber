@@ -63,8 +63,11 @@ def main():
         if not msgs:
             print("No messages received yet.")
         for m in msgs:
-            print(f"\n[From: {m.get('FromNumber')} | {m.get('message_time')}]")
-            print(f"  {m.get('Messagebody', '').strip()}")
+            sender = m.get('FromNumber', 'Unknown').encode('ascii', 'replace').decode('ascii')
+            mtime = m.get('message_time', '-').encode('ascii', 'replace').decode('ascii')
+            body = m.get('Messagebody', '').encode('ascii', 'replace').decode('ascii').strip()
+            print(f"\n[From: {sender} | {mtime}]")
+            print(f"  {body}")
 
     elif args.command == "code":
         client = TempNumberClient()
@@ -74,7 +77,8 @@ def main():
             print("\n[OK] VERIFICATION CODE EXTRACTED:")
             print(f"  Code:   {otp_info['code']}")
             print(f"  Sender: {otp_info['sender']}")
-            print(f"  Body:   {otp_info['body'][:120]}...")
+            body_clean = otp_info['body'][:120].encode('ascii', 'replace').decode('ascii')
+            print(f"  Body:   {body_clean}...")
         else:
             print("Timed out waiting for SMS.", file=sys.stderr)
             sys.exit(1)
