@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tempnumber-client"
+version = "0.1.0"
+description = "Unofficial Temp-Number Python Client & Interactive Terminal UI (SMS & OTP Receiver)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "NeuralS", email = "team@neurals.et" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "textual>=0.50.0"
+]
+keywords = [
+    "tempnumber",
+    "disposable-phone",
+    "receive-sms",
+    "sms-verification",
+    "otp-receiver",
+    "tui",
+    "textual"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Communications :: Telephony"
+]
+
+[project.scripts]
+tempnumber = "tempnumber.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/neurals-et/tempnumber"
+Repository = "https://github.com/neurals-et/tempnumber"
+
+[tool.setuptools]
+packages = ["tempnumber"]

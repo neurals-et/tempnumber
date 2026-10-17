@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Reverse-engineering artifacts
+apktool_out/
+*.apk
+
+# Configuration and secrets
+.tempnumber_config.json
+tempnumber_settings.json
+.env
+
+# Distribution and packaging
+dist/
+build/
+*.egg-info/
+*.whl
+*.tar.gz
+*.zip
+
+# Virtual environments
+venv/
+.venv/
