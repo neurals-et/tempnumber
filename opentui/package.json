@@ -1,0 +1,23 @@
+{
+  "name": "tempnumber-tui",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "tempnumber": "./index.ts"
+  },
+  "scripts": {
+    "start": "bun index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.6.6",
+    "@opentui/core-win32-x64": "^0.6.6",
+    "opentui-spinner": "^0.0.7"
+  }
+}

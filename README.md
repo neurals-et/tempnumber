@@ -31,7 +31,13 @@ pip install .
 
 ### Terminal Dashboard
 ```bash
+# Python Textual TUI
 tempnumber
+
+# Or Bun + OpenTUI Dashboard
+cd opentui
+bun install
+bun run start
 ```
 
 ### CLI Commands
