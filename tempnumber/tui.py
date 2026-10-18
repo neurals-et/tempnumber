@@ -1,6 +1,6 @@
 """
 TempNumber Textual TUI Application
-Interactive terminal interface for disposable phone numbers & SMS verification codes
+Complete terminal interface for public/private numbers, SMS, and Coin farming
 """
 
 import re
@@ -39,7 +39,6 @@ class TempNumberTUI(App):
     .card {
         background: #1e293b;
         border: solid #334155;
-        border-radius: 1;
         padding: 1 2;
         margin: 1;
     }
@@ -61,7 +60,6 @@ class TempNumberTUI(App):
     .num-val {
         color: #5eead4;
         text-style: bold;
-        font-size: 150%;
     }
 
     .otp-banner {
@@ -75,7 +73,19 @@ class TempNumberTUI(App):
     .otp-val {
         color: #34d399;
         text-style: bold;
-        font-size: 160%;
+    }
+
+    .coin-banner {
+        background: #78350f;
+        border: solid #f59e0b;
+        padding: 1 2;
+        margin: 1;
+        text-align: center;
+    }
+
+    .coin-val {
+        color: #fde68a;
+        text-style: bold;
     }
 
     Button {
@@ -95,6 +105,22 @@ class TempNumberTUI(App):
 
     Button.accent:hover {
         background: #3b82f6;
+    }
+
+    Button.gold {
+        background: #d97706;
+    }
+
+    Button.gold:hover {
+        background: #f59e0b;
+    }
+
+    Button.success {
+        background: #059669;
+    }
+
+    Button.success:hover {
+        background: #10b981;
     }
 
     Input {
@@ -141,7 +167,7 @@ class TempNumberTUI(App):
                         yield Label(self.client.active_number or "Select a number below", id="lbl-active-number", classes="num-val")
                         with Horizontal():
                             yield Button("Check Messages (SMS)", id="btn-check-sms", classes="accent")
-                            yield Button("Fetch Country Numbers", id="btn-fetch-numbers")
+                            yield Button("Bookmark as Favorite", id="btn-fav-add")
 
                     with Vertical(classes="otp-banner"):
                         yield Label("Latest Extracted OTP / Verification Code:", classes="card-title")
@@ -168,7 +194,44 @@ class TempNumberTUI(App):
                         yield Label("Message Content:", classes="card-title")
                         yield Static("Select an incoming message to read full text.", id="lbl-sms-body")
 
-            # 3. ALL COUNTRIES
+            # 3. COINS & FARMING
+            with TabPane("Coins & Rewards", id="tab-coins"):
+                with ScrollableContainer():
+                    with Vertical(classes="coin-banner"):
+                        yield Label("Current Coin Balance:", classes="card-title")
+                        yield Label("450 Coins", id="lbl-coin-balance", classes="coin-val")
+                        yield Button("Automate All Farming (Check-in + Spin + Box)", id="btn-farm-all", classes="gold")
+
+                    with Container(classes="card"):
+                        yield Label("Individual Reward Actions", classes="card-title")
+                        with Horizontal():
+                            yield Button("Daily Check-in (+30)", id="btn-daily-check")
+                            yield Button("Spin Lucky Wheel (+50)", id="btn-spin-wheel")
+                            yield Button("Open Surprise Box (+20)", id="btn-surprise-box")
+
+            # 4. PRIVATE NUMBERS
+            with TabPane("Private Numbers", id="tab-private"):
+                with ScrollableContainer():
+                    with Container(classes="card"):
+                        yield Label("My Dedicated Rented Numbers", classes="card-title")
+                        yield DataTable(id="tbl-private-numbers")
+                        yield Button("Refresh Rented Numbers", id="btn-refresh-private")
+
+                    with Container(classes="card"):
+                        yield Label("Rent a Private Number with Coins", classes="card-title")
+                        yield Label("Inventory ID:")
+                        yield Input(placeholder="inv_us_01", id="inp-rent-inv")
+                        yield Button("Rent with Coins", id="btn-rent-submit", classes="success")
+
+            # 5. FAVORITES
+            with TabPane("Favorites", id="tab-favs"):
+                with ScrollableContainer():
+                    with Container(classes="card"):
+                        yield Label("Saved Favorite Numbers", classes="card-title")
+                        yield DataTable(id="tbl-favorites")
+                        yield Button("Refresh Favorites", id="btn-refresh-favs")
+
+            # 6. ALL COUNTRIES
             with TabPane("All Countries (62)", id="tab-countries"):
                 with ScrollableContainer():
                     with Container(classes="card"):
@@ -176,7 +239,7 @@ class TempNumberTUI(App):
                         yield DataTable(id="tbl-all-countries")
                         yield Button("Reload Countries List", id="btn-reload-countries")
 
-            # 4. SETTINGS
+            # 7. SETTINGS
             with TabPane("Settings", id="tab-settings"):
                 with ScrollableContainer():
                     with Container(classes="card"):
@@ -192,7 +255,7 @@ class TempNumberTUI(App):
                             yield Switch(value=self.config.get("mock_mode"), id="sw-cfg-mock")
                         yield Button("Save Configuration", id="btn-cfg-save")
 
-            # 5. LOG
+            # 8. LOG
             with TabPane("Activity Log", id="tab-log"):
                 with Container(classes="card"):
                     yield Label("Live Request & OTP Log", classes="card-title")
@@ -210,8 +273,15 @@ class TempNumberTUI(App):
         tbl_all_c = self.query_one("#tbl-all-countries", DataTable)
         tbl_all_c.add_columns("Code", "Country Name", "ID")
 
+        tbl_priv = self.query_one("#tbl-private-numbers", DataTable)
+        tbl_priv.add_columns("Number", "Country", "Expires")
+
+        tbl_fav = self.query_one("#tbl-favorites", DataTable)
+        tbl_fav.add_columns("Number", "Country")
+
         self.action_load_countries()
         self.action_load_numbers("United States")
+        self.action_refresh_coins()
         self.log_msg("TempNumber TUI initialized.")
 
     def log_msg(self, msg: str) -> None:
@@ -271,7 +341,7 @@ class TempNumberTUI(App):
             body = m.get("Messagebody", "")
             mtime = m.get("message_time", "-")
             preview = body.replace("\n", " ")[:60]
-            tbl.add_row(mfrom, preview, mtime, key=str(m.get("FromNumber")) + "_" + str(len(body)))
+            tbl.add_row(mfrom, preview, mtime)
 
             if not latest_otp:
                 mat = re_otp.findall(body)
@@ -284,13 +354,54 @@ class TempNumberTUI(App):
 
         self.log_msg(f"SMS Inbox refreshed: {len(msgs)} messages.")
 
+    def action_refresh_coins(self) -> None:
+        res = self.client.get_user_coins()
+        coins = res.get("coins") or res.get("balance", 0)
+        self.query_one("#lbl-coin-balance", Label).update(f"{coins} Coins")
+
     def on_button_pressed(self, event: Button.Pressed) -> None:
         bid = event.button.id
         if bid == "btn-check-sms":
             self.action_check_sms()
-        elif bid == "btn-fetch-numbers":
-            country = self.query_one("#sel-country", Select).value or "United States"
-            self.action_load_numbers(country)
+        elif bid == "btn-fav-add":
+            if self.client.active_number:
+                self.client.add_favorite(self.client.active_number)
+                self.log_msg(f"Bookmarked {self.client.active_number} to favorites.")
+        elif bid == "btn-farm-all":
+            self.log_msg("Running automated coin farming...")
+            r = self.client.farm_all_coins()
+            self.action_refresh_coins()
+            self.log_msg("Farmed daily check-in, wheel spin, and surprise box!")
+        elif bid == "btn-daily-check":
+            r = self.client.perform_daily_checkin()
+            self.action_refresh_coins()
+            self.log_msg("Daily check-in claimed.")
+        elif bid == "btn-spin-wheel":
+            r = self.client.spin_wheel()
+            self.action_refresh_coins()
+            self.log_msg("Lucky wheel spun!")
+        elif bid == "btn-surprise-box":
+            r = self.client.open_surprise_box()
+            self.action_refresh_coins()
+            self.log_msg("Surprise box opened!")
+        elif bid == "btn-refresh-private":
+            privs = self.client.get_purchased_numbers()
+            tbl = self.query_one("#tbl-private-numbers", DataTable)
+            tbl.clear()
+            for p in privs:
+                tbl.add_row(p.get("number", "-"), p.get("country", "-"), p.get("expires", "-"))
+            self.log_msg(f"Loaded {len(privs)} private numbers.")
+        elif bid == "btn-rent-submit":
+            inv = self.query_one("#inp-rent-inv", Input).value or "inv_01"
+            r = self.client.rent_number_with_coins(inv)
+            self.log_msg(f"Rented number with coins: {r.get('status')}")
+        elif bid == "btn-refresh-favs":
+            favs = self.client.get_favorites()
+            tbl = self.query_one("#tbl-favorites", DataTable)
+            tbl.clear()
+            for f in favs:
+                tbl.add_row(f.get("number", "-"), f.get("country", "-"))
+            self.log_msg(f"Loaded {len(favs)} favorites.")
         elif bid == "btn-reload-countries":
             self.action_load_countries()
         elif bid == "btn-cfg-save":
@@ -304,7 +415,7 @@ class TempNumberTUI(App):
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         tbl_id = event.data_table.id
         if tbl_id == "tbl-numbers":
-            selected_num = event.row_key.value
+            selected_num = str(event.row_key.value)
             self.set_active_number(selected_num)
         elif tbl_id == "tbl-sms":
             idx = event.cursor_row
@@ -314,6 +425,8 @@ class TempNumberTUI(App):
                 self.query_one("#lbl-sms-to", Label).update(f"Recipient: {m.get('ToNumber')}")
                 self.query_one("#lbl-sms-time", Label).update(f"Time: {m.get('message_time')}")
                 self.query_one("#lbl-sms-body", Static).update(m.get("Messagebody", "(Empty Message)"))
+        elif tbl_id == "tbl-favorites" or tbl_id == "tbl-private-numbers":
+            pass
 
 
 if __name__ == "__main__":

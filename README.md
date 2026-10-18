@@ -1,6 +1,6 @@
 # tempnumber-client
 
-> Python client and interactive Terminal User Interface (TUI) for temporary disposable phone numbers and SMS verification codes (`com.tempnumber.Temp_Number.Temp_Number`).
+> Python client and interactive Terminal User Interface (TUI) for temporary disposable phone numbers, SMS verification codes, and coin rewards (`com.tempnumber.Temp_Number.Temp_Number`).
 
 Maintained by [NeuralS](https://github.com/neurals-et).
 
@@ -8,11 +8,14 @@ Maintained by [NeuralS](https://github.com/neurals-et).
 
 ## Features
 
-- **62 Countries**: Free temporary phone numbers across United States, United Kingdom, Canada, France, Netherlands, Sweden, and more.
-- **Instant SMS Inbox**: Live incoming SMS feed for receiving activation and verification texts.
-- **Automated OTP Extractor**: Integrated regex parser to extract 4–8 digit verification codes from incoming SMS.
-- **Interactive TUI**: Built with Textual for country selection, number browsing, and real-time OTP monitoring.
-- **CLI Commands**: CLI tools (`tempnumber list`, `tempnumber sms`, `tempnumber code`) ready for CI/CD and script automation.
+- **62 Countries**: Free temporary phone numbers across United States, United Kingdom, Canada, France, Netherlands, Sweden, etc.
+- **Live SMS Feed**: Real-time incoming SMS messages for receiving verification texts.
+- **Automated OTP Extractor**: Integrated regex engine that extracts 4–8 digit verification codes automatically.
+- **Coin Rewards & Farming**: Check-in daily, spin the lucky wheel, and open mystery boxes to earn coins.
+- **Private Numbers**: Rent dedicated, private numbers using earned coins.
+- **Favorites**: Bookmark frequently used phone numbers.
+- **Interactive TUI**: 8-tab terminal dashboard powered by Textual.
+- **CLI Commands**: Terminal utilities (`tempnumber list`, `tempnumber sms`, `tempnumber code`, `tempnumber farm`).
 
 ---
 
@@ -29,8 +32,6 @@ pip install .
 ### Terminal Dashboard
 ```bash
 tempnumber
-# or
-tempnumber tui
 ```
 
 ### CLI Commands
@@ -44,8 +45,21 @@ tempnumber list --country "United States"
 # View SMS inbox for a number
 tempnumber sms +12544525112
 
-# Wait for and print the next OTP code (automation ready)
+# Wait for and print the next OTP code
 tempnumber code +12544525112 --timeout 60
+
+# Check coin balance
+tempnumber coins
+
+# Automated one-click coin farming
+tempnumber farm
+
+# View private rented numbers
+tempnumber private
+
+# Manage bookmarked favorites
+tempnumber fav
+tempnumber fav --add +12544525112
 ```
 
 ### Python SDK
@@ -68,17 +82,29 @@ for m in messages:
 otp = client.wait_for_otp(phone, timeout_secs=60)
 if otp:
     print(f"Extracted OTP: {otp['code']} from {otp['sender']}")
+
+# 4. Automate daily coin farming
+farm = client.farm_all_coins()
+print("Farmed Coins Balance:", farm["balance"])
 ```
 
 ---
 
 ## Endpoints
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/country` | List 62 supported countries |
-| `POST` | `/api/numbers` | Query available active numbers for a country |
-| `POST` | `/api/sms` | Query real-time incoming SMS messages for a number |
+| Category | Endpoint | Method | Description |
+|---|---|---|---|
+| **Public** | `/api/country` | `GET` | List 62 supported countries |
+| **Public** | `/api/numbers` | `POST` | Query available active numbers |
+| **Public** | `/api/sms` | `POST` | Read real-time incoming SMS messages |
+| **Coins** | `/api/coins/getUserCoins` | `GET` | Check coin balance |
+| **Coins** | `/api/coins/performDailyCheck` | `POST` | Claim daily attendance reward |
+| **Coins** | `/api/coins/spinWheel` | `POST` | Spin lucky wheel for coins |
+| **Coins** | `/api/coins/openSurpriseBox` | `POST` | Open mystery box reward |
+| **Private**| `/api/purchased-numbers` | `GET` | List user's dedicated rented numbers |
+| **Private**| `/api/purchase-number-android` | `POST` | Rent number using earned coins |
+| **Private**| `/api/premium-sms` | `POST` | Read private number SMS |
+| **Favs** | `/api/favorite-numbers` | `GET` / `POST` | Manage bookmarked numbers |
 
 ---
 
