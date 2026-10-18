@@ -5,6 +5,9 @@ Complete terminal interface for public/private numbers, SMS, and Coin farming
 
 import re
 import time
+import sys
+import os
+
 from textual.app import App, ComposeResult
 from textual.containers import Container, Horizontal, Vertical, ScrollableContainer
 from textual.widgets import (
@@ -12,8 +15,14 @@ from textual.widgets import (
     Select, DataTable, Switch, Log
 )
 from textual.binding import Binding
-from .client import TempNumberClient
-from .config import TempNumberConfig
+
+try:
+    from .client import TempNumberClient
+    from .config import TempNumberConfig
+except (ImportError, ValueError):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from tempnumber.client import TempNumberClient
+    from tempnumber.config import TempNumberConfig
 
 
 class TempNumberTUI(App):
